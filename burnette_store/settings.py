@@ -94,12 +94,8 @@ WSGI_APPLICATION = 'burnette_store.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': os.getenv('DJANGO_DB_ENGINE', 'django.db.backends.mysql'),
-        'NAME': os.getenv('DJANGO_DB_NAME', 'burnette_store'),
-        'USER': os.getenv('DJANGO_DB_USER', 'root'),
-        'PASSWORD': os.getenv('DJANGO_DB_PASSWORD', 'Ayubu@2539'),
-        'HOST': os.getenv('DJANGO_DB_HOST', '127.0.0.1'),
-        'PORT': os.getenv('DJANGO_DB_PORT', '3306'),
+        'ENGINE': os.getenv('DJANGO_DB_ENGINE', 'django.db.backends.sqlite3'),
+        'NAME': os.getenv('DJANGO_DB_NAME', BASE_DIR / 'db.sqlite3'),
     }
 }
 
