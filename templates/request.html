@@ -1,0 +1,275 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Request Product - Burnette Phone Store{% endblock %}
+{% block og_title %}Request Product - Burnette Phone Store{% endblock %}
+{% block page %}request{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <h1 class="text-center mb-4">Request a Product</h1>
+    <p class="text-center text-muted mb-5">Fill out the form below to request a product. We'll get back to you with pricing and availability.</p>
+    
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+    {% endif %}
+    
+    <form method="post" class="shadow-sm p-4 rounded bg-light" id="request-form" autocomplete="off">
+      {% csrf_token %}
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label for="product" class="form-label">Select Product</label>
+          <select class="form-select" id="product" name="product" required onchange="updatePrice()">
+            <option value="" selected>Choose a product...</option>
+            {% for product in products %}
+            <option value="{{ product.id }}" data-price="{{ product.price }}" {% if selected_product and selected_product.id == product.id %}selected{% endif %}>{{ product.name }} - TZS {{ product.price }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Original Price</label>
+          <input type="text" class="form-control" id="original_price" readonly value="TZS 0">
+        </div>
+        <div class="col-md-6">
+          <label for="discount" class="form-label">Discount Amount (Optional)</label>
+          <input type="number" class="form-control" id="discount" name="discount" min="0" onchange="calculatePrice()">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Final Price</label>
+          <input type="text" class="form-control" id="final_price" readonly>
+        </div>
+        <div class="col-md-6">
+          <label for="name" class="form-label">Full Name</label>
+          <input type="text" class="form-control" id="name" name="name" required
+            value="{% if request.user.is_authenticated %}{{ request.user.get_full_name|default:request.user.username }}{% endif %}">
+        </div>
+        <div class="col-md-6">
+          <label for="phone" class="form-label">Phone Number</label>
+          <input type="tel" class="form-control" id="phone" name="phone" required
+            value="{% if request.user.is_authenticated %}{{ request.user.userprofile.phone }}{% endif %}">
+        </div>
+        <div class="col-md-6">
+          <label for="email" class="form-label">Email (Optional)</label>
+          <input type="email" class="form-control" id="email" name="email"
+            value="{% if request.user.is_authenticated %}{{ request.user.email }}{% endif %}">
+        </div>
+        <div class="col-12">
+          <label class="form-label">Do you need delivery?</label>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="wants_delivery" id="delivery_yes" value="true" required>
+                <label class="form-check-label" for="delivery_yes">
+                  Yes
+                </label>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="wants_delivery" id="delivery_no" value="false" required>
+                <label class="form-check-label" for="delivery_no">
+                  No
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="location-section" style="display: none;">
+          <div class="col-md-6">
+            <label for="region" class="form-label">Region</label>
+            <select class="form-select" id="region" name="region">
+              <option value="">Select region...</option>
+              <option value="Dar es Salaam">Dar es Salaam</option>
+              <option value="Arusha">Arusha</option>
+              <option value="Mwanza">Mwanza</option>
+              <option value="Dodoma">Dodoma</option>
+              <option value="Mbeya">Mbeya</option>
+              <option value="Tanga">Tanga</option>
+              <option value="Morogoro">Morogoro</option>
+              <option value="Zanzibar">Zanzibar</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label for="district" class="form-label">District</label>
+            <select class="form-select" id="district" name="district">
+              <option value="">Select district...</option>
+            </select>
+          </div>
+        </div>
+        <div class="col-12" id="payment-section" style="display: none;">
+          <label class="form-label">Payment Method</label>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="payment_method" id="bank" value="bank">
+                <label class="form-check-label" for="bank">
+                  Bank Transfer
+                </label>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="payment_method" id="mobile" value="mobile">
+                <label class="form-check-label" for="mobile">
+                  Mobile Money
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-12" id="bank-options" style="display: none;">
+          <label for="bank_name" class="form-label">Select Bank</label>
+          <select class="form-select" id="bank_name" name="bank_name">
+            <option value="">Choose a bank...</option>
+            {% for bank in banks %}
+            <option value="{{ bank.name }}">{{ bank.name }} - {{ bank.account_number }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-12" id="mobile-options" style="display: none;">
+          <label for="mobile_name" class="form-label">Select Mobile Money</label>
+          <select class="form-select" id="mobile_name" name="mobile_name">
+            <option value="">Choose mobile money...</option>
+            {% for mobile in mobiles %}
+            <option value="{{ mobile.name }}">{{ mobile.name }} - {{ mobile.number }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-12">
+          <p class="text-muted small">We respect your privacy — your contact info is used only to follow up on this request and will not be shared.</p>
+        </div>
+        <div class="col-12">
+          <button type="submit" class="btn btn-primary w-100">Submit Request</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+const districts = {
+  "Dar es Salaam": ["Kinondoni", "Ilala", "Temeke", "Ubungo", "Kigamboni"],
+  "Arusha": ["Arusha", "Arumeru", "Monduli", "Ngorongoro"],
+  "Mwanza": ["Nyamagana", "Ilemela", "Kwimba", "Magu"],
+  "Dodoma": ["Dodoma", "Chamwino", "Kondoa"],
+  "Mbeya": ["Mbeya", "Chunya", "Kyela", "Rungwe"],
+  "Tanga": ["Tanga", "Pangani", "Muheza", "Korogwe"],
+  "Morogoro": ["Morogoro", "Kilombero", "Ulanga", "Mvomero"],
+  "Zanzibar": ["Unguja", "Pemba"],
+  "Other": ["Other"]
+};
+
+function resetProductSelection() {
+  const productSelect = document.getElementById('product');
+  const originalPriceInput = document.getElementById('original_price');
+  const finalPriceInput = document.getElementById('final_price');
+
+  if (productSelect) {
+    productSelect.selectedIndex = 0;
+  }
+  if (originalPriceInput) {
+    originalPriceInput.value = 'TZS 0';
+  }
+  if (finalPriceInput) {
+    finalPriceInput.value = '';
+  }
+}
+
+function shouldClearProductOnLoad() {
+  const params = new URLSearchParams(window.location.search);
+  // If not explicitly navigating to a product via ?product=, clear the fields.
+  return !params.has('product');
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  if (shouldClearProductOnLoad()) {
+    resetProductSelection();
+  }
+  updatePrice();
+  
+  const regionSelect = document.getElementById('region');
+  const districtSelect = document.getElementById('district');
+  const deliveryYes = document.getElementById('delivery_yes');
+  const deliveryNo = document.getElementById('delivery_no');
+  const locationSection = document.getElementById('location-section');
+  const paymentSection = document.getElementById('payment-section');
+  const bankRadio = document.getElementById('bank');
+  const mobileRadio = document.getElementById('mobile');
+  const bankOptions = document.getElementById('bank-options');
+  const mobileOptions = document.getElementById('mobile-options');
+  
+  regionSelect.addEventListener('change', function() {
+    const selectedRegion = this.value;
+    districtSelect.innerHTML = '<option value="">Select district...</option>';
+    if (districts[selectedRegion]) {
+      districts[selectedRegion].forEach(district => {
+        const option = document.createElement('option');
+        option.value = district;
+        option.textContent = district;
+        districtSelect.appendChild(option);
+      });
+    }
+  });
+  
+  deliveryYes.addEventListener('change', function() {
+    if (this.checked) {
+      locationSection.style.display = 'block';
+      paymentSection.style.display = 'none';
+      document.getElementById('region').required = true;
+      document.getElementById('district').required = true;
+      document.querySelectorAll('input[name="payment_method"]').forEach(radio => radio.required = false);
+    }
+  });
+  
+  deliveryNo.addEventListener('change', function() {
+    if (this.checked) {
+      locationSection.style.display = 'none';
+      paymentSection.style.display = 'block';
+      document.getElementById('region').required = false;
+      document.getElementById('district').required = false;
+      document.querySelectorAll('input[name="payment_method"]').forEach(radio => radio.required = true);
+    }
+  });
+  
+  bankRadio.addEventListener('change', function() {
+    if (this.checked) {
+      bankOptions.style.display = 'block';
+      mobileOptions.style.display = 'none';
+      document.getElementById('bank_name').required = true;
+      document.getElementById('mobile_name').required = false;
+    }
+  });
+  
+  mobileRadio.addEventListener('change', function() {
+    if (this.checked) {
+      mobileOptions.style.display = 'block';
+      bankOptions.style.display = 'none';
+      document.getElementById('mobile_name').required = true;
+      document.getElementById('bank_name').required = false;
+    }
+  });
+});
+
+function updatePrice() {
+  const productSelect = document.getElementById('product');
+  const selectedOption = productSelect.options[productSelect.selectedIndex];
+  const price = selectedOption.getAttribute('data-price') || 0;
+  document.getElementById('original_price').value = 'TZS ' + price;
+  calculatePrice();
+}
+
+function calculatePrice() {
+  const originalPrice = parseFloat(document.getElementById('original_price').value.replace('TZS ', '')) || 0;
+  const discount = parseFloat(document.getElementById('discount').value) || 0;
+  const finalPrice = Math.max(0, originalPrice - discount);
+  document.getElementById('final_price').value = 'TZS ' + finalPrice;
+}
+</script>
+{% endblock %}

@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin Dashboard - Burnette Phone Store{% endblock %}
+{% block og_title %}Admin Dashboard - Burnette Phone Store{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1>Admin Dashboard</h1>
+  <a href="{% url 'admin_logout' %}" class="btn btn-outline-danger">Logout</a>
+</div>
+
+<ul class="nav nav-tabs" id="adminTabs" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active" id="products-tab" data-bs-toggle="tab" data-bs-target="#products" type="button" role="tab">Products</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="updates-tab" data-bs-toggle="tab" data-bs-target="#updates" type="button" role="tab">Updates</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="requests-tab" data-bs-toggle="tab" data-bs-target="#requests" type="button" role="tab">Requests</button>
+  </li>
+</ul>
+
+<div class="tab-content mt-4" id="adminTabsContent">
+  <div class="tab-pane fade show active" id="products" role="tabpanel">
+    <h3>Manage Products</h3>
+    <a href="{% url 'admin:store_product_add' %}" class="btn btn-primary mb-3">Add New Product</a>
+    <div class="table-responsive">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Price</th>
+            <th>Category</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for product in products %}
+          <tr>
+            <td>{{ product.name }}</td>
+            <td>TZS {{ product.price|floatformat:0 }}</td>
+            <td>{{ product.category }}</td>
+            <td>
+              <a href="{% url 'admin:store_product_change' product.id %}" class="btn btn-sm btn-outline-primary">Edit</a>
+              <a href="{% url 'admin:store_product_delete' product.id %}" class="btn btn-sm btn-outline-danger">Delete</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  
+  <div class="tab-pane fade" id="updates" role="tabpanel">
+    <h3>Manage Updates</h3>
+    <a href="{% url 'admin:store_update_add' %}" class="btn btn-primary mb-3">Add New Update</a>
+    <div class="table-responsive">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Created</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for update in updates %}
+          <tr>
+            <td>{{ update.title }}</td>
+            <td>{{ update.created_at|date:"M d, Y" }}</td>
+            <td>
+              <a href="{% url 'admin:store_update_change' update.id %}" class="btn btn-sm btn-outline-primary">Edit</a>
+              <a href="{% url 'admin:store_update_delete' update.id %}" class="btn btn-sm btn-outline-danger">Delete</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  
+  <div class="tab-pane fade" id="requests" role="tabpanel">
+    <h3>Customer Requests</h3>
+    <div class="mb-3 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
+      <div>
+        <label class="form-label me-2 mb-0">Filter by status:</label>
+        <select id="requestStatusFilter" class="form-select d-inline-block w-auto">
+          <option value="">All</option>
+          <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+          <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Approved</option>
+          <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
+        </select>
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Customer</th>
+            <th>Phone</th>
+            <th>Region</th>
+            <th>District</th>
+            <th>Price</th>
+            <th>Discount</th>
+            <th>Final</th>
+            <th>Delivery</th>
+            <th>Payment</th>
+            <th>Status</th>
+            <th>Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for request in requests %}
+          <tr>
+            <td>{{ request.product.name }}</td>
+            <td>{{ request.contact_name }}</td>
+            <td>{{ request.contact_phone }}</td>
+            <td>{{ request.region }}</td>
+            <td>{{ request.district }}</td>
+            <td>TZS {{ request.base_price|floatformat:0 }}</td>
+            <td>TZS {{ request.discount|floatformat:0 }}</td>
+            <td>TZS {{ request.final_price|floatformat:0 }}</td>
+            <td>{% if request.wants_delivery %}Yes{% else %}No{% endif %}</td>
+            <td>{{ request.get_payment_method_display }}</td>
+            <td>{{ request.get_status_display }}</td>
+            <td>{{ request.created_at|date:"M d, Y H:i" }}</td>
+            <td>
+              <div class="d-flex gap-1 flex-wrap">
+                <a href="{% url 'admin:store_request_delete' request.id %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                {% if request.status != 'approved' %}
+                  <a href="{% url 'admin_update_request_status' request.id 'approved' %}" class="btn btn-sm btn-success">Approve</a>
+                {% endif %}
+                {% if request.status != 'rejected' %}
+                  <a href="{% url 'admin_update_request_status' request.id 'rejected' %}" class="btn btn-sm btn-warning">Reject</a>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const filter = document.getElementById('requestStatusFilter');
+    if (!filter) return;
+    filter.addEventListener('change', () => {
+      const value = filter.value;
+      const params = new URLSearchParams(window.location.search);
+      if (value) params.set('status', value);
+      else params.delete('status');
+      window.location.search = params.toString();
+    });
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Products - Burnette Phone Store{% endblock %}
+{% block og_title %}Products - Burnette Phone Store{% endblock %}
+{% block meta_description %}Browse our collection of latest smartphones and accessories at Burnette Phone Store. Find premium phones with competitive prices and fast delivery in Tanzania.{% endblock %}
+{% block page %}products{% endblock %}
+
+{% block content %}
+<h1 class="text-center mb-4">Our Products</h1>
+{% if query %}
+  <p class="text-center text-muted mb-4">Search results for "<strong>{{ query }}</strong>"</p>
+{% else %}
+  <p class="text-center text-muted mb-5">Browse our collection of latest smartphones and accessories.</p>
+{% endif %}
+
+<div class="row g-4" id="products-grid">
+  {% for product in products %}
+  <div class="col-md-6 col-lg-4">
+    <div class="card h-100 shadow-sm product-card">
+      {% if product.media_file %}
+        {% if product.media_type == 'video' %}
+          <div class="ratio ratio-16x9">
+            <video class="w-100 h-100" controls>
+              <source src="{{ product.media_file.url }}" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        {% else %}
+          <div class="ratio ratio-16x9">
+            <img src="{{ product.media_file.url }}" class="card-img-top w-100 h-100" alt="{{ product.name }}" loading="lazy">
+          </div>
+        {% endif %}
+      {% elif product.media_url %}
+        {% if product.media_type == 'video' %}
+          <div class="ratio ratio-16x9">
+            <video class="w-100 h-100" controls>
+              <source src="{{ product.media_url }}" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        {% else %}
+          <div class="ratio ratio-16x9">
+            <img src="{{ product.media_url }}" class="card-img-top w-100 h-100" alt="{{ product.name }}" loading="lazy">
+          </div>
+        {% endif %}
+      {% else %}
+        <div class="ratio ratio-16x9">
+          <img src="{% static 'images/placeholder.jpg' %}" class="card-img-top w-100 h-100" alt="{{ product.name }}" loading="lazy">
+        </div>
+      {% endif %}
+      <div class="card-body d-flex flex-column">
+        <h5 class="card-title">{{ product.name }}</h5>
+        <p class="card-text">{{ product.description }}</p>
+        <div class="mt-auto">
+          <p class="fw-bold text-primary">TZS {{ product.price|floatformat:0 }}</p>
+          {% if user.is_authenticated %}
+            <a href="{% url 'add_to_cart' product.id %}" class="btn btn-success w-100 mb-2">Add to Cart</a>
+          {% endif %}
+          <button class="btn btn-primary w-100" onclick="requestProduct({{ product.id }})">Request Offer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <div class="col-12 text-center">
+    <p class="text-muted">No products found{% if query %} matching your search{% endif %}.</p>
+    {% if query %}
+      <a href="{% url 'products' %}" class="btn btn-primary">View All Products</a>
+    {% endif %}
+  </div>
+  {% endfor %}
+
+<script>
+function requestProduct(productId) {
+  window.location.href = '{% url "request_product" %}?product=' + productId;
+}
+</script>
+{% endblock %}

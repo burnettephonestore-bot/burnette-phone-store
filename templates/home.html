@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Home - Burnette Phone Store{% endblock %}
+{% block og_title %}Home - Burnette Phone Store{% endblock %}
+{% block meta_description %}Discover the latest smartphones at Burnette Phone Store in Tanzania. Shop premium phones with fast delivery, secure payments, and unbeatable prices.{% endblock %}
+{% block page %}home{% endblock %}
+
+{% block content %}
+<div class="row align-items-center hero-section">
+  <div class="col-lg-6">
+    <h1 class="display-5 fw-bold">Discover the Latest Smartphones</h1>
+    <p class="lead text-muted">Explore our curated collection of premium phones with unbeatable prices, fast delivery across Tanzania, and secure payment options.</p>
+    <div class="d-flex gap-3 flex-wrap">
+      <a href="{% url 'products' %}" class="btn btn-primary btn-lg"><i class="fas fa-shopping-bag me-2"></i>Shop Now</a>
+      <a href="{% url 'updates' %}" class="btn btn-outline-primary btn-lg"><i class="fas fa-bullhorn me-2"></i>Latest Deals</a>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="ratio ratio-16x9 rounded shadow-lg video-bg">
+      <video autoplay muted loop controls class="rounded">
+        <source src="/media/logos/WhatsApp Video 2026-03-15 at 21.47.57.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+      </video>
+    </div>
+  </div>
+</div>
+
+<section class="mt-5">
+  <h2 class="text-center mb-4">Why Choose Burnette?</h2>
+  <div class="row g-4 text-center">
+    <div class="col-md-4">
+      <div class="p-4 rounded shadow-sm bg-white h-100">
+        <div class="mb-3 text-primary"><i class="fas fa-truck fa-2x"></i></div>
+        <h5>Fast Delivery</h5>
+        <p class="mb-0">We deliver across Tanzania with clear tracking and reliable service.</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="p-4 rounded shadow-sm bg-white h-100">
+        <div class="mb-3 text-primary"><i class="fas fa-shield-alt fa-2x"></i></div>
+        <h5>Secure Payments</h5>
+        <p class="mb-0">Choose from mobile money or bank transfer with trusted partners.</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="p-4 rounded shadow-sm bg-white h-100">
+        <div class="mb-3 text-primary"><i class="fas fa-star fa-2x"></i></div>
+        <h5>Best Prices</h5>
+        <p class="mb-0">Competitive pricing and special offers tailored for you.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="mt-5">
+  <h2 class="text-center mb-4">Featured Products</h2>
+  <div class="row g-4" id="products-grid">
+    {% for product in products %}
+    <div class="col-md-6 col-lg-4">
+      <div class="card h-100 shadow-sm product-card">
+        {% if product.media_file %}
+          {% if product.media_type == 'video' %}
+            <div class="ratio ratio-16x9">
+              <video class="w-100 h-100" controls>
+                <source src="{{ product.media_file.url }}" type="video/mp4">
+                Your browser does not support the video tag.
+              </video>
+            </div>
+          {% else %}
+            <div class="ratio ratio-16x9">
+              <img src="{{ product.media_file.url }}" class="card-img-top w-100 h-100" alt="{{ product.name }}" loading="lazy">
+            </div>
+          {% endif %}
+        {% elif product.media_url %}
+          {% if product.media_type == 'video' %}
+            <div class="ratio ratio-16x9">
+              <video class="w-100 h-100" controls>
+                <source src="{{ product.media_url }}" type="video/mp4">
+                Your browser does not support the video tag.
+              </video>
+            </div>
+          {% else %}
+            <div class="ratio ratio-16x9">
+              <img src="{{ product.media_url }}" class="card-img-top w-100 h-100" alt="{{ product.name }}" loading="lazy">
+            </div>
+          {% endif %}
+        {% else %}
+          <div class="ratio ratio-16x9">
+            <img src="{% static 'images/placeholder.jpg' %}" class="card-img-top w-100 h-100" alt="{{ product.name }}" loading="lazy">
+          </div>
+        {% endif %}
+        <div class="card-body d-flex flex-column">
+          <h5 class="card-title">{{ product.name }}</h5>
+          <p class="card-text">{{ product.description|truncatechars:100 }}</p>
+          <div class="mt-auto">
+            <p class="fw-bold text-primary">TZS {{ product.price }}</p>
+            <button class="btn btn-primary w-100" onclick="requestProduct({{ product.id }})">Request Offer</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="mt-5">
+  <h2 class="text-center mb-4">Latest Updates</h2>
+  <div class="row g-4" id="updates-grid">
+    {% for update in updates %}
+    <div class="col-md-6 col-lg-4">
+      <div class="card h-100 shadow-sm update-card">
+        {% if update.type == 'image' or update.type == 'video' %}
+          {% if update.media_file %}
+            {% if update.type == 'video' %}
+              <div class="ratio ratio-16x9">
+                <video class="w-100 h-100" controls>
+                  <source src="{{ update.media_file.url }}" type="video/mp4">
+                  Your browser does not support the video tag.
+                </video>
+              </div>
+            {% else %}
+              <div class="ratio ratio-16x9">
+                <img src="{{ update.media_file.url }}" class="card-img-top w-100 h-100" alt="{{ update.title }}">
+              </div>
+            {% endif %}
+          {% elif update.media_url %}
+            {% if update.type == 'video' %}
+              <div class="ratio ratio-16x9">
+                <video class="w-100 h-100" controls>
+                  <source src="{{ update.media_url }}" type="video/mp4">
+                  Your browser does not support the video tag.
+                </video>
+              </div>
+            {% else %}
+              <div class="ratio ratio-16x9">
+                <img src="{{ update.media_url }}" class="card-img-top w-100 h-100" alt="{{ update.title }}">
+              </div>
+            {% endif %}
+          {% endif %}
+        {% endif %}
+        <div class="card-body">
+          <h5 class="card-title">{{ update.title }}</h5>
+          <p class="card-text">{{ update.content|truncatechars:150 }}</p>
+          <small class="text-muted">{{ update.created_at|date:"M d, Y" }}</small>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

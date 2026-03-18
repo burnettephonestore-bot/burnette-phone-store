@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}My Requests - Burnette Phone Store{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <h1 class="mb-4">My Product Requests</h1>
+  {% if requests %}
+    <div class="table-responsive">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th scope="col">Request ID</th>
+            <th scope="col">Product</th>
+            <th scope="col">Customer</th>
+            <th scope="col">Final Price</th>
+            <th scope="col">Status</th>
+            <th scope="col">Submitted</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for req in requests %}
+          <tr>
+            <td>{{ req.id }}</td>
+            <td>{{ req.product_name }}</td>
+            <td>{{ req.contact_name }}{% if req.contact_email %} ({{ req.contact_email }}){% endif %}</td>
+            <td>TZS {{ req.final_price }}</td>
+            <td>{{ req.get_status_display }}</td>
+            <td>{{ req.created_at|date:'SHORT_DATETIME_FORMAT' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="alert alert-info">You have not submitted any product requests yet.</div>
+  {% endif %}
+</div>
+{% endblock %}
